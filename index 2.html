@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b6b78">
+  <meta name="description" content="Calculadora clínica local del OUES predicho y porcentaje del predicho.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="OUES">
+  <title>Calculadora OUES</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <style>
+:root {
+  color-scheme: light;
+  --bg: #eef5f5;
+  --surface: #ffffff;
+  --surface-soft: #f5f9f9;
+  --ink: #153238;
+  --muted: #60777c;
+  --line: #d8e5e6;
+  --primary: #0b6b78;
+  --primary-dark: #07535e;
+  --accent: #70bf73;
+  --accent-soft: #e7f6e8;
+  --danger: #b42318;
+  --danger-soft: #fff2f0;
+  --shadow: 0 18px 50px rgba(26, 67, 73, 0.10);
+  --radius: 22px;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(112, 191, 115, 0.16), transparent 30rem),
+    radial-gradient(circle at 100% 20%, rgba(11, 107, 120, 0.12), transparent 34rem),
+    var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+button, input { font: inherit; }
+button { -webkit-tap-highlight-color: transparent; }
+
+.app-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) 0 max(28px, env(safe-area-inset-bottom));
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.brand { display: flex; align-items: center; gap: 16px; }
+.brand-icon { border-radius: 16px; box-shadow: 0 10px 24px rgba(11, 107, 120, 0.18); }
+.eyebrow, .step {
+  margin: 0 0 4px;
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+}
+
+h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.35rem); line-height: 1.08; }
+.subtitle { margin: 6px 0 0; color: var(--muted); }
+
+.privacy-pill {
+  flex: 0 0 auto;
+  padding: 9px 13px;
+  border: 1px solid rgba(11, 107, 120, .16);
+  border-radius: 999px;
+  background: rgba(255,255,255,.72);
+  color: var(--primary-dark);
+  font-size: .86rem;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(340px, .92fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.input-card, .result-card {
+  border: 1px solid rgba(255,255,255,.82);
+  border-radius: var(--radius);
+  background: rgba(255,255,255,.95);
+  box-shadow: var(--shadow);
+  padding: clamp(20px, 4vw, 30px);
+}
+
+.result-card { position: sticky; top: 16px; }
+
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 23px;
+}
+
+h2 { margin: 0; font-size: 1.35rem; }
+
+.text-button {
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  padding: 8px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.text-button:hover { text-decoration: underline; }
+
+fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+legend { padding: 0; font-weight: 750; }
+
+.field-group { margin-bottom: 22px; }
+.field-group legend { margin-bottom: 10px; }
+
+.segmented-control, .binary-control {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+
+.segmented-control label, .binary-control label { cursor: pointer; }
+.segmented-control input, .binary-control input { position: absolute; opacity: 0; pointer-events: none; }
+.segmented-control span, .binary-control span {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: var(--muted);
+  font-weight: 750;
+  transition: .16s ease;
+}
+.segmented-control input:checked + span, .binary-control input:checked + span {
+  background: var(--surface);
+  color: var(--primary-dark);
+  box-shadow: 0 3px 12px rgba(28, 74, 81, .10);
+}
+.segmented-control input:focus-visible + span, .binary-control input:focus-visible + span {
+  outline: 3px solid rgba(11, 107, 120, .20);
+}
+
+.input-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+.field { display: grid; gap: 7px; }
+.field > span { font-weight: 750; }
+.field small { color: var(--muted); font-size: .79rem; font-weight: 600; }
+.wide-field { grid-column: 1 / -1; }
+
+input[type="number"] {
+  width: 100%;
+  min-height: 50px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfdfd;
+  color: var(--ink);
+  padding: 11px 13px;
+  font-size: 1.04rem;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+input[type="number"]:focus {
+  border-color: var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(11, 107, 120, .10);
+}
+input[aria-invalid="true"] { border-color: var(--danger); background: var(--danger-soft); }
+.field-error { min-height: 1em; color: var(--danger); font-size: .76rem; font-style: normal; }
+
+.choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; margin: 22px 0; }
+.choice-card { padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-soft); }
+.choice-card legend { margin-bottom: 11px; font-size: .9rem; line-height: 1.3; }
+.binary-control { background: #eaf1f1; }
+.binary-control span { min-height: 37px; }
+
+.form-message { min-height: 1.3em; margin-bottom: 9px; color: var(--danger); font-size: .88rem; font-weight: 650; }
+
+.primary-button, .secondary-button {
+  width: 100%;
+  border: 0;
+  border-radius: 13px;
+  cursor: pointer;
+  font-weight: 800;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.primary-button {
+  min-height: 54px;
+  background: linear-gradient(135deg, var(--primary), #118596);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(11, 107, 120, .22);
+}
+.secondary-button {
+  min-height: 46px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--primary-dark);
+}
+.primary-button:hover, .secondary-button:hover { transform: translateY(-1px); }
+.primary-button:active, .secondary-button:active { transform: translateY(0); }
+
+.sex-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #e6f2f4;
+  color: var(--primary-dark);
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.empty-state { padding: 54px 20px 44px; text-align: center; }
+.empty-illustration {
+  display: grid;
+  width: 82px;
+  height: 82px;
+  margin: 0 auto 18px;
+  place-items: center;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #e6f5f6, #eef8e9);
+  color: var(--primary);
+  font-size: 2.25rem;
+  font-weight: 900;
+  transform: rotate(-3deg);
+}
+.empty-state h3 { margin: 0 0 7px; }
+.empty-state p { margin: 0; color: var(--muted); }
+
+.results { display: grid; gap: 16px; }
+.hero-result {
+  display: grid;
+  gap: 8px;
+  padding: 23px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+  color: #fff;
+  text-align: center;
+}
+.hero-result span { font-weight: 750; opacity: .86; }
+.hero-result strong { font-size: clamp(2.7rem, 10vw, 4.6rem); line-height: 1; letter-spacing: -.045em; }
+
+.metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.metric { padding: 17px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface-soft); }
+.metric span { display: block; margin-bottom: 8px; color: var(--muted); font-size: .84rem; font-weight: 700; }
+.metric strong { font-size: 1.65rem; }
+
+.report-box { padding: 18px; border-radius: 16px; background: var(--accent-soft); border: 1px solid rgba(112,191,115,.24); }
+.report-box > span { color: #326936; font-size: .82rem; font-weight: 850; text-transform: uppercase; letter-spacing: .07em; }
+.report-box p { margin: 10px 0 15px; line-height: 1.55; }
+.copy-status { min-height: 1.2em; margin-top: 8px; color: #326936; font-size: .82rem; text-align: center; font-weight: 750; }
+
+.formula-details { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 16px; }
+.formula-details summary { color: var(--primary); font-weight: 800; cursor: pointer; }
+.formula-content { margin-top: 12px; padding: 15px; border-radius: 13px; background: var(--surface-soft); color: var(--muted); font-size: .84rem; line-height: 1.55; overflow-wrap: anywhere; }
+.formula-content p { margin: 0 0 9px; }
+.formula-content p:last-child { margin-bottom: 0; }
+
+footer { padding: 22px 8px 0; color: var(--muted); font-size: .78rem; text-align: center; line-height: 1.5; }
+footer p { margin: 2px 0; }
+.clinical-note { color: #6a7072; }
+
+@media (max-width: 860px) {
+  .workspace { grid-template-columns: 1fr; }
+  .result-card { position: static; }
+}
+
+@media (max-width: 620px) {
+  .app-shell { width: min(100% - 20px, 1180px); padding-top: max(14px, env(safe-area-inset-top)); }
+  .app-header { align-items: flex-start; }
+  .brand-icon { width: 48px; height: 48px; border-radius: 14px; }
+  .subtitle { font-size: .86rem; }
+  .privacy-pill { display: none; }
+  .input-card, .result-card { padding: 19px 16px; border-radius: 19px; }
+  .input-grid, .choice-grid { grid-template-columns: 1fr; }
+  .wide-field { grid-column: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <img src="data:image/png;base64,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" alt="" class="brand-icon" width="56" height="56">
+        <div>
+          <p class="eyebrow">Ergoespirometría</p>
+          <h1>Calculadora OUES</h1>
+          <p class="subtitle">OUES predicho y porcentaje respecto al predicho</p>
+        </div>
+      </div>
+      <div class="privacy-pill" title="Los datos no se envían ni se guardan">
+        <span aria-hidden="true">🔒</span> Cálculo local
+      </div>
+    </header>
+
+    <section class="workspace" aria-label="Calculadora">
+      <form id="oues-form" class="input-card" novalidate>
+        <div class="section-heading">
+          <div>
+            <p class="step">Datos del paciente</p>
+            <h2>Variables de la ecuación</h2>
+          </div>
+          <button type="button" id="reset-button" class="text-button">Limpiar</button>
+        </div>
+
+        <fieldset class="field-group">
+          <legend>Sexo</legend>
+          <div class="segmented-control" role="radiogroup" aria-label="Sexo">
+            <label>
+              <input type="radio" name="sex" value="male" checked>
+              <span>Hombre</span>
+            </label>
+            <label>
+              <input type="radio" name="sex" value="female">
+              <span>Mujer</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="input-grid">
+          <label class="field">
+            <span>Edad <small>años</small></span>
+            <input id="age" name="age" type="number" inputmode="decimal" min="1" max="120" step="1" placeholder="Ej. 58" required>
+            <em class="field-error" id="age-error"></em>
+          </label>
+
+          <label class="field">
+            <span>Altura <small>cm</small></span>
+            <input id="height" name="height" type="number" inputmode="decimal" min="50" max="250" step="0.1" placeholder="Ej. 175" required>
+            <em class="field-error" id="height-error"></em>
+          </label>
+
+          <label class="field">
+            <span>Peso <small>kg</small></span>
+            <input id="weight" name="weight" type="number" inputmode="decimal" min="2" max="400" step="0.1" placeholder="Ej. 95" required>
+            <em class="field-error" id="weight-error"></em>
+          </label>
+
+          <label class="field">
+            <span>FEV1 <small>litros</small></span>
+            <input id="fev1" name="fev1" type="number" inputmode="decimal" min="0.1" max="10" step="0.01" placeholder="Ej. 2,50" required>
+            <em class="field-error" id="fev1-error"></em>
+          </label>
+
+          <label class="field wide-field">
+            <span>OUES medido</span>
+            <input id="measured" name="measured" type="number" inputmode="decimal" min="0.01" max="10" step="0.01" placeholder="Ej. 1,87" required>
+            <em class="field-error" id="measured-error"></em>
+          </label>
+        </div>
+
+        <div class="choice-grid">
+          <fieldset class="choice-card">
+            <legend>¿Toma betabloqueante?</legend>
+            <div class="binary-control">
+              <label><input type="radio" name="beta" value="yes"><span>Sí</span></label>
+              <label><input type="radio" name="beta" value="no" checked><span>No</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="choice-card">
+            <legend>¿Fumador o exfumador &lt; 1 año?</legend>
+            <div class="binary-control">
+              <label><input type="radio" name="smoker" value="yes"><span>Sí</span></label>
+              <label><input type="radio" name="smoker" value="no" checked><span>No</span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div id="form-message" class="form-message" role="alert" aria-live="polite"></div>
+        <button type="submit" class="primary-button">Calcular OUES</button>
+      </form>
+
+      <section class="result-card" aria-live="polite" aria-labelledby="results-title">
+        <div class="section-heading">
+          <div>
+            <p class="step">Resultado</p>
+            <h2 id="results-title">Cálculo del paciente</h2>
+          </div>
+          <span id="sex-badge" class="sex-badge">Hombre</span>
+        </div>
+
+        <div id="empty-state" class="empty-state">
+          <div class="empty-illustration" aria-hidden="true">%</div>
+          <h3>Introduce los datos</h3>
+          <p>El OUES predicho y el porcentaje aparecerán aquí.</p>
+        </div>
+
+        <div id="results" class="results" hidden>
+          <div class="hero-result">
+            <span>OUES % predicho</span>
+            <strong id="percent-result">—</strong>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric">
+              <span>OUES medido</span>
+              <strong id="measured-result">—</strong>
+            </div>
+            <div class="metric">
+              <span>OUES predicho</span>
+              <strong id="predicted-result">—</strong>
+            </div>
+          </div>
+
+          <div class="report-box">
+            <span>Texto para el informe</span>
+            <p id="report-text"></p>
+            <button type="button" id="copy-button" class="secondary-button">
+              <span aria-hidden="true">⧉</span> Copiar resultado
+            </button>
+            <div id="copy-status" class="copy-status" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <details class="formula-details">
+          <summary>Ecuaciones utilizadas</summary>
+          <div class="formula-content">
+            <p><strong>Hombres:</strong> (909,7 − edad×11,51 + altura×5,67 + peso×8,62 − betabloqueante×49,99 − tabaco×214,53 + FEV1×172,97) / 1000.</p>
+            <p><strong>Mujeres:</strong> (−182,4 − edad×8,89 + altura×10,12 + peso×10,51 − betabloqueante×117,65 − tabaco×21,45 + FEV1×40,31) / 1000.</p>
+            <p>En las variables dicotómicas, «sí» aplica el coeficiente y «no» equivale a cero.</p>
+          </div>
+        </details>
+      </section>
+    </section>
+
+    <footer>
+      <p>Herramienta basada en las fórmulas del archivo Excel aportado. No almacena ni transmite datos.</p>
+      <p class="clinical-note">Antes de incorporarla a la práctica clínica, conviene verificar la ecuación y su población de referencia.</p>
+    </footer>
+  </main>
+
+  <script>
+(() => {
+  'use strict';
+
+  const form = document.getElementById('oues-form');
+  const resetButton = document.getElementById('reset-button');
+  const copyButton = document.getElementById('copy-button');
+  const emptyState = document.getElementById('empty-state');
+  const results = document.getElementById('results');
+  const formMessage = document.getElementById('form-message');
+  const copyStatus = document.getElementById('copy-status');
+  const sexBadge = document.getElementById('sex-badge');
+
+  const fields = {
+    age: document.getElementById('age'),
+    height: document.getElementById('height'),
+    weight: document.getElementById('weight'),
+    fev1: document.getElementById('fev1'),
+    measured: document.getElementById('measured')
+  };
+
+  const limits = {
+    age: { min: 1, max: 120, label: 'Edad' },
+    height: { min: 50, max: 250, label: 'Altura' },
+    weight: { min: 2, max: 400, label: 'Peso' },
+    fev1: { min: 0.1, max: 10, label: 'FEV1' },
+    measured: { min: 0.01, max: 10, label: 'OUES medido' }
+  };
+
+  const number2 = new Intl.NumberFormat('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+
+  const percent1 = new Intl.NumberFormat('es-ES', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1
+  });
+
+  let lastResult = null;
+
+  function getRadioValue(name) {
+    return form.elements[name].value;
+  }
+
+  function parseValue(input) {
+    return Number.parseFloat(input.value.replace(',', '.'));
+  }
+
+  function validate() {
+    let isValid = true;
+
+    Object.entries(fields).forEach(([key, input]) => {
+      const value = parseValue(input);
+      const config = limits[key];
+      const error = document.getElementById(`${key}-error`);
+      let message = '';
+
+      if (input.value.trim() === '' || !Number.isFinite(value)) {
+        message = 'Introduce un valor.';
+      } else if (value < config.min || value > config.max) {
+        message = `Revisa el valor (${config.min}–${config.max}).`;
+      }
+
+      input.setAttribute('aria-invalid', message ? 'true' : 'false');
+      error.textContent = message;
+      if (message) isValid = false;
+    });
+
+    formMessage.textContent = isValid ? '' : 'Revisa los campos señalados antes de calcular.';
+    return isValid;
+  }
+
+  function calculatePredicted(data) {
+    const beta = data.beta ? 1 : 0;
+    const smoker = data.smoker ? 1 : 0;
+
+    if (data.sex === 'male') {
+      return (
+        909.7
+        - data.age * 11.51
+        + data.height * 5.67
+        + data.weight * 8.62
+        - beta * 49.99
+        - smoker * 214.53
+        + data.fev1 * 172.97
+      ) / 1000;
+    }
+
+    return (
+      -182.4
+      - data.age * 8.89
+      + data.height * 10.12
+      + data.weight * 10.51
+      - beta * 117.65
+      - smoker * 21.45
+      + data.fev1 * 40.31
+    ) / 1000;
+  }
+
+  function collectData() {
+    return {
+      sex: getRadioValue('sex'),
+      age: parseValue(fields.age),
+      height: parseValue(fields.height),
+      weight: parseValue(fields.weight),
+      fev1: parseValue(fields.fev1),
+      measured: parseValue(fields.measured),
+      beta: getRadioValue('beta') === 'yes',
+      smoker: getRadioValue('smoker') === 'yes'
+    };
+  }
+
+  function renderResult(data) {
+    const predicted = calculatePredicted(data);
+    const percentage = (data.measured / predicted) * 100;
+
+    if (!Number.isFinite(predicted) || predicted <= 0 || !Number.isFinite(percentage)) {
+      formMessage.textContent = 'La combinación introducida produce un OUES predicho no válido. Revisa los datos.';
+      return;
+    }
+
+    const sexText = data.sex === 'male' ? 'Hombre' : 'Mujer';
+    const report = `OUES medido: ${number2.format(data.measured)}; OUES predicho: ${number2.format(predicted)}; ${percent1.format(percentage)} % del predicho.`;
+
+    document.getElementById('measured-result').textContent = number2.format(data.measured);
+    document.getElementById('predicted-result').textContent = number2.format(predicted);
+    document.getElementById('percent-result').textContent = `${percent1.format(percentage)} %`;
+    document.getElementById('report-text').textContent = report;
+    sexBadge.textContent = sexText;
+
+    emptyState.hidden = true;
+    results.hidden = false;
+    copyStatus.textContent = '';
+    lastResult = { ...data, predicted, percentage, report };
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    copyStatus.textContent = '';
+    if (!validate()) {
+      const firstInvalid = form.querySelector('[aria-invalid="true"]');
+      firstInvalid?.focus();
+      return;
+    }
+    renderResult(collectData());
+  });
+
+  Object.values(fields).forEach((input) => {
+    input.addEventListener('input', () => {
+      input.setAttribute('aria-invalid', 'false');
+      document.getElementById(`${input.id}-error`).textContent = '';
+      formMessage.textContent = '';
+      if (lastResult && validate()) renderResult(collectData());
+    });
+  });
+
+  form.querySelectorAll('input[type="radio"]').forEach((input) => {
+    input.addEventListener('change', () => {
+      if (input.name === 'sex') {
+        sexBadge.textContent = input.value === 'male' ? 'Hombre' : 'Mujer';
+      }
+      if (lastResult && validate()) renderResult(collectData());
+    });
+  });
+
+  resetButton.addEventListener('click', () => {
+    form.reset();
+    Object.values(fields).forEach((input) => {
+      input.setAttribute('aria-invalid', 'false');
+      document.getElementById(`${input.id}-error`).textContent = '';
+    });
+    formMessage.textContent = '';
+    copyStatus.textContent = '';
+    emptyState.hidden = false;
+    results.hidden = true;
+    sexBadge.textContent = 'Hombre';
+    lastResult = null;
+    fields.age.focus();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastResult) return;
+    try {
+      await navigator.clipboard.writeText(lastResult.report);
+      copyStatus.textContent = 'Resultado copiado.';
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = lastResult.report;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      const success = document.execCommand('copy');
+      textarea.remove();
+      copyStatus.textContent = success ? 'Resultado copiado.' : 'No se pudo copiar automáticamente.';
+    }
+  });
+
+  // API mínima para pruebas automatizadas sin alterar la interfaz.
+  window.OUESCalculator = { calculatePredicted };
+})();
+
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+OUES PWA
+
+Contenido:
+- index.html: calculadora OUES
+- manifest.webmanifest: datos de instalación
+- service-worker.js: funcionamiento sin conexión
+- icon-192.png, icon-512.png, apple-touch-icon.png
+
+Para instalarla en iPhone:
+1. Publicar esta carpeta en un sitio HTTPS (por ejemplo, GitHub Pages, Netlify o Cloudflare Pages).
+2. Abrir la URL en Safari.
+3. Compartir > Añadir a pantalla de inicio.
+4. La app aparecerá como “OUES” y se abrirá en modo independiente.
+
+La calculadora funciona localmente y no envía ni almacena datos.
