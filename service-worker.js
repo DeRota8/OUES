@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oues-v1';
+const CACHE_NAME = 'oues-v2';
 const ASSETS = [
   './',
   './index.html',
